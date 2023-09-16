@@ -4,6 +4,7 @@ require('dotenv').config();
 const app = express();
 //미들웨어
 app.use(express.static('public'))
+app.use(express.json())
 const port = 3000;
 
 
@@ -52,35 +53,61 @@ app.get('/postpage', (req, res) => {
     res.sendFile(__dirname+"/public/postpage.html")
 })
 
-app.get('/post', async (req, res) => {
+app.post('/post', async (req, res) => {
     const userToken = req.headers.authorization && req.headers.authorization.split(' ')[1];
-    var subject = encodeURI("네이버 카페 api Test node js");
-    var content = encodeURI("네이버 카페 api로 글을 카페에 글을 올려봅니다.");
+    console.log(userToken, 'userToken')
+    const { subject, content } = req.body;
     const api_url = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
-    
-    console.log(userToken, 'userTokens')
-    if(!userToken){
-        return res.status(403).send('Unauthorized');
+
+    if(!userToken) {
+        return res.status(403).send('Unauthorized')
     }
-
     const HEADER_AUTHORIZATION = "Bearer " + userToken;
-
     try {
         const response = await axios.post(api_url, {
-            subject: subject,
-            content: content
+            subject: encodeURI(subject),  
+            content: encodeURI(content)   
         }, {
             headers: {
-                'Authorization': HEADER_AUTHORIZATION
+                'Authorization': HEADER_AUTHORIZATION,
+                'Content-Type': 'application/x-www-form-urlencoded'
             }
         })
 
-        res.status(200).json(response.data)
+        res.status(200).json(response.data);
     } catch(error) {
-        console.log('Error posting to Naver Cafe:', error.response.data)
+        console.log('Error posting to Naver Cafe:', error.response.data);
         res.status(error.response.status).send(error.response.data);
     }
 })
+// app.get('/post', async (req, res) => {
+//     const userToken = req.headers.authorization && req.headers.authorization.split(' ')[1];
+//     var subject = encodeURI("네이버 카페 api Test node js");
+//     var content = encodeURI("네이버 카페 api로 글을 카페에 글을 올려봅니다.");
+//     const api_url = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
+//     console.log(userToken, 'userTokens')
+//     if(!userToken){
+//         return res.status(403).send('Unauthorized');
+//     }
+
+//     const HEADER_AUTHORIZATION = "Bearer " + userToken;
+
+//     try {
+//         const response = await axios.post(api_url, {
+//             subject: subject,
+//             content: content
+//         }, {
+//             headers: {
+//                 'Authorization': HEADER_AUTHORIZATION
+//             }
+//         })
+
+//         res.status(200).json(response.data)
+//     } catch(error) {
+//         console.log('Error posting to Naver Cafe:', error.response.data)
+//         res.status(error.response.status).send(error.response.data);
+//     }
+// })
 
 app.listen(port, () => {
     console.log(`서버가 실행됩니다. http://localhost:${port}`)
