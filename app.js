@@ -2,7 +2,10 @@ const express = require('express');
 const axios = require('axios');
 require('dotenv').config();
 const app = express();
+//미들웨어
+app.use(express.static('public'))
 const port = 3000;
+
 
 const client_id = process.env.NAVER_CLIENT_ID;
 const client_secret = process.env.NAVER_CLIENT_SECRET;
@@ -17,9 +20,7 @@ var api_url = ""
 
 let tokens = {}
 
-app.get('/', (req, res) => {
-    res.send('hello world!!!')
-})
+app.get('/')
 
 app.get('/login', function(req, res) {
     const state = Math.random().toString(36).substring(2,15);
@@ -32,22 +33,17 @@ app.get('/callback', async (req, res) => {
     try {
         api_url = 'https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id='+client_id+'&client_secret='+client_secret+'&redirect_uri='+redirectURI+'&code='+code+'&state='+state;
         const response = await axios.get(api_url);
-        
         const { access_token, refresh_token } = response.data;
-        
-        res.send(`
-        <body>
-         <p>인증성공!</p>
-        </body>
+        return res.send(`
         <script>
         localStorage.setItem('access_token', '${access_token}');
         localStorage.setItem('refresh_token', '${refresh_token}');
-                
+        location.href = '/';
         </script>
         `)
     } catch (error) {
         console.error('네이버 로그인 에러', error);
-        res.status(500).send('네이버 로그인에 실패하였습니다.')
+        return res.status(500).send('네이버 로그인에 실패하였습니다.')
     }
 })
 
