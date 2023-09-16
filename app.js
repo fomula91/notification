@@ -38,13 +38,18 @@ app.get('/callback', async (req, res) => {
         <script>
         localStorage.setItem('access_token', '${access_token}');
         localStorage.setItem('refresh_token', '${refresh_token}');
-        location.href = '/';
+        location.href = '/postpage';
         </script>
         `)
     } catch (error) {
         console.error('네이버 로그인 에러', error);
         return res.status(500).send('네이버 로그인에 실패하였습니다.')
     }
+}
+)
+
+app.get('/postpage', (req, res) => {
+    res.sendFile(__dirname+"/public/postpage.html")
 })
 
 app.get('/post', async (req, res) => {
