@@ -1,6 +1,6 @@
 const express = require('express');
 const axios = require('axios');
-const { chromium } = require('playwright');
+const { chromium, firefox } = require('playwright');
 require('dotenv').config();
 const app = express();
 //미들웨어
@@ -21,13 +21,28 @@ var api_url = ""
 
 const state = Math.random().toString(36).substring(2,15);
 api_url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${client_id}&redirect_uri=${redirectURI}&state=${state}`;
+let my_code, my_state;
 ( async () => {
-    const browser = await chromium.launch({headless: false});
-const context = await browser.newContext();
-const page = await context.newPage()
-await page.goto(api_url).then((res) => console.log(res))
+    const browser = await chromium.launch({ headless: false });
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto(api_url);
+    await page.locator('#id').fill(`${process.env.NAVER_TEST_ID}`);
+    await page.locator('#pw').fill(`${process.env.NAVER_TEST_PW}`);
+    await page.locator('.btn_login').click();
+    await page.goto(page.url());
+    const params = new URLSearchParams(new URL(page.url()).search);
+    const state_value = params.get('state');
+    const code_value = params.get('code')
+    // console.log("state: ",state_value, "code_token: ",  code_value)
+    my_code = code_value;
+    my_state = state_value;
+    console.log('my_code: ', my_code, "\n", "my_state: ", my_state);
 
-})
+    browser.close();
+
+})();
+console.log('outter -> my_code: ', my_code, "\n", "outter -> my_state: ", my_state);
 
 // twitch api
 const test_uset_id = process.env.TEST_USER_ID
@@ -72,21 +87,22 @@ app.get('/login', function(req, res) {
 
 app.get('/callback', async (req, res) => {
     const { code, state } = req.query
-    try {
-        api_url = 'https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id='+client_id+'&client_secret='+client_secret+'&redirect_uri='+redirectURI+'&code='+code+'&state='+state;
-        const response = await axios.get(api_url);
-        const { access_token, refresh_token } = response.data;
-        return res.send(`
-        <script>
-        localStorage.setItem('access_token', '${access_token}');
-        localStorage.setItem('refresh_token', '${refresh_token}');
-        location.href = '/postpage';
-        </script>
-        `)
-    } catch (error) {
-        console.error('네이버 로그인 에러', error);
-        return res.status(500).send('네이버 로그인에 실패하였습니다.')
-    }
+    res.sendFile(__dirname+"/public/callback.html")
+    // try {
+    //     api_url = 'https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id='+client_id+'&client_secret='+client_secret+'&redirect_uri='+redirectURI+'&code='+code+'&state='+state;
+    //     const response = await axios.get(api_url);
+    //     const { access_token, refresh_token } = response.data;
+    //     return res.send(`
+    //     <script>
+    //     localStorage.setItem('access_token', '${access_token}');
+    //     localStorage.setItem('refresh_token', '${refresh_token}');
+    //     location.href = '/postpage';
+    //     </script>
+    //     `)
+    // } catch (error) {
+    //     console.error('네이버 로그인 에러', error);
+    //     return res.status(500).send('네이버 로그인에 실패하였습니다.')
+    // }
 }
 )
 
