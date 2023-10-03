@@ -20,6 +20,39 @@ const redirectURI = encodeURI("http://localhost:3000/callback")
 var api_url = ""
 
 let tokens = {}
+const test_uset_id = 156709134
+let twitch_token;
+let flag = false;
+axios.post(`https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_SECRET_KEY}&grant_type=client_credentials`)
+.then((res) => {
+    twitch_token = res.data.access_token
+    flag = true
+    console.log(twitch_token)
+})
+
+console.log(flag)
+setInterval(() => {
+    if(flag) {
+        console.log(flag)
+        console.log(twitch_token)
+        try{
+            axios.get(`https://api.twitch.tv/helix/streams?user_id=${test_uset_id}`, {
+                headers: {
+                    Authorization: "Bearer "+ twitch_token,
+                    "Client-Id": process.env.TWITCH_CLIENT_ID
+                }
+            })
+            .then((res) => {
+                console.log(res.data)
+            })
+        }catch(e) {
+            console.log(e)
+        }
+        
+    }
+}, 5000)
+
+
 
 app.get('/')
 
@@ -80,33 +113,21 @@ app.post('/post', async (req, res) => {
         res.status(error.response.status).send(error.response.data);
     }
 })
-// app.get('/post', async (req, res) => {
-//     const userToken = req.headers.authorization && req.headers.authorization.split(' ')[1];
-//     var subject = encodeURI("네이버 카페 api Test node js");
-//     var content = encodeURI("네이버 카페 api로 글을 카페에 글을 올려봅니다.");
-//     const api_url = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
-//     console.log(userToken, 'userTokens')
-//     if(!userToken){
-//         return res.status(403).send('Unauthorized');
-//     }
 
-//     const HEADER_AUTHORIZATION = "Bearer " + userToken;
-
-//     try {
-//         const response = await axios.post(api_url, {
-//             subject: subject,
-//             content: content
-//         }, {
-//             headers: {
-//                 'Authorization': HEADER_AUTHORIZATION
-//             }
-//         })
-
-//         res.status(200).json(response.data)
-//     } catch(error) {
-//         console.log('Error posting to Naver Cafe:', error.response.data)
-//         res.status(error.response.status).send(error.response.data);
-//     }
+// app.get('/twitch', async (req, res) => {
+//     const token = process.env.TWITCH_CLIENT_ID
+//     // axios.get('https://api.twitch.tv/helix/streams', {}, {headers: {"Client-Id" : token}})
+//     await axios({
+//       method: "get",
+//       url: "https://api.twitch.tv/helix/streams",
+//       header: {
+//         Authorization: "none",
+//         "client-Id" : token
+//       }  
+//     })
+//     .then((res) => {
+//         console.log(res)
+//     })
 // })
 
 app.listen(port, () => {
