@@ -1,6 +1,6 @@
 const express = require('express');
 const axios = require('axios');
-const { chromium, firefox } = require('playwright');
+const { chromium } = require('playwright');
 require('dotenv').config();
 const app = express();
 //미들웨어
@@ -24,7 +24,7 @@ api_url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id
 
 const playwright = async () => {
     let my_code, my_state;
-    const browser = await chromium.launch({ headless: false });
+    const browser = await chromium.launch();
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.goto(api_url);
@@ -42,44 +42,48 @@ const playwright = async () => {
     return {code : my_code, state: my_state}
 };
 //playwright block
+
 const runNaver = () => {
-    return new Promise( async (resolve, reject) => {
-        try{
-            await playwright().then((res) => resolve(res));
-        } catch(e) {
-            console.log(e);
-            reject(e);
-        }
-    })
-};
-runNaver().then( async (res) => {
-    const naver_code = res.code;
-    const naver_state = res.state;
-    const api_url = 
-    'https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id='+client_id+'&client_secret='+client_secret+'&redirect_uri='+redirectURI+'&code='+naver_code+'&state='+naver_state;
-    const response = await axios.get(api_url);
-    const { access_token, refresh_token } = response.data;
-    return { "ac_token" :access_token, "rf_token": refresh_token}
-
-})
-.then( async (res) => {
-    
-    const ac = res.ac_token;
-    const rf = res.rf_token;
-    const api_url = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
-    const token = "Bearer "+ ac; 
-    const headers = {
-        'Authorization': token,
-        'Content-Type': 'application/x-www-form-urlencoded'
+    const startPlaywright = () => {
+        return new Promise( async (resolve, reject) => {
+            try{
+                await playwright().then((res) => resolve(res));
+            } catch(e) {
+                console.log(e);
+                reject(e);
+            }
+        })
     };
+    startPlaywright().then( async (res) => {
+        const naver_code = res.code;
+        const naver_state = res.state;
+        const api_url = 
+        'https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id='+client_id+'&client_secret='+client_secret+'&redirect_uri='+redirectURI+'&code='+naver_code+'&state='+naver_state;
+        const response = await axios.get(api_url);
+        const { access_token, refresh_token } = response.data;
+        return { "ac_token" :access_token, "rf_token": refresh_token}
+    
+    })
+    .then( async (res) => {
+        
+        const ac = res.ac_token;
+        const api_url = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
+        const token = "Bearer "+ ac; 
+        const headers = {
+            'Authorization': token,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        };
+    
+        await axios.post(api_url,{
+            subject: subject,  
+            content: content   
+        },{
+            headers : headers
+        } )
+    });
+}
 
-    const response = await axios.post(api_url,{
-        subject: subject,  
-        content: content   
-    },{
-        headers : headers
-    } )
-});
+
 
 // twitch api
 const test_uset_id = process.env.TEST_USER_ID
@@ -91,37 +95,36 @@ axios.post(`https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLI
     flag = true
 })
 
-setInterval(() => {
-    if(flag) {
-        try{
-            axios.get(`https://api.twitch.tv/helix/streams?user_id=${test_uset_id}`, {
-                headers: {
-                    Authorization: "Bearer "+ twitch_token,
-                    "Client-Id": process.env.TWITCH_CLIENT_ID
-                }
-            })
-            .then((res) => {
-                console.log(res.data)
-            })
-        }catch(e) {
-            console.log(e)
-        }
+var twitch_id = ""; 
+var twitch_title;
+
+setInterval( async () => {
+    try{
+        const response = await axios.get(`https://api.twitch.tv/helix/streams?user_id=${test_uset_id}`, {
+            headers: {
+                Authorization: "Bearer "+ twitch_token,
+                "Client-Id": process.env.TWITCH_CLIENT_ID
+            }
+        })
+        .then((res) => res.data.data);
         
+        if (response.length > 0) {
+            if(response[0].id !== twitch_id){
+                twitch_id = response[0].id
+                twitch_title = response[0].title
+                subject = encodeURI(twitch_title)
+                runNaver()
+            }
+        }
+    }catch(e) {
+        console.log(e)
     }
 }, 5000)
-
-
-
-app.get('/')
 
 app.get('/callback', async (req, res) => {
     res.sendFile(__dirname+"/public/callback.html")
 }
 )
-
-app.get('/postpage', (req, res) => {
-    res.sendFile(__dirname+"/public/postpage.html")
-})
 
 app.listen(port, () => {
     console.log(`서버가 실행됩니다. http://localhost:${port}`)
