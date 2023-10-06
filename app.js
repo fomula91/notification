@@ -24,7 +24,7 @@ api_url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id
 
 const playwright = async () => {
     let my_code, my_state;
-    const browser = await chromium.launch();
+    const browser = await chromium.launch({headless: false});
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.goto(api_url);
