@@ -11,16 +11,18 @@ const port = 3000;
 
 const client_id = process.env.NAVER_CLIENT_ID;
 const client_secret = process.env.NAVER_CLIENT_SECRET;
-const clubid = process.env.NAVER_CLUB_ID;
-const menuid = process.env.NAVER_CLUB_MENU_ID;
-var subject = encodeURI("네이버 카페 api Test node js");
-var content = encodeURI("네이버 카페 api로 글을 카페에 글을 올려봅니다.");
+const clubid = process.env.NAVER_MARE_ID;
+const menuid = process.env.NAVER_MARE_MENU_ID;
+const naver_oauth_url = process.env.NAVER_OAUTH
+var subject = encodeURI("생방송알림");
+var content = encodeURI(process.env.MARE_URL);
+console.log(content)
 
 const redirectURI = encodeURI("http://localhost:3000/callback")
 var api_url = ""
 
 const state = Math.random().toString(36).substring(2,15);
-api_url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${client_id}&redirect_uri=${redirectURI}&state=${state}`;
+api_url = `${naver_oauth_url}/authorize?response_type=code&client_id=${client_id}&redirect_uri=${redirectURI}&state=${state}`;
 
 const playwright = async () => {
     let my_code, my_state;
@@ -28,8 +30,8 @@ const playwright = async () => {
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.goto(api_url);
-    await page.locator('#id').fill(`${process.env.NAVER_TEST_ID}`);
-    await page.locator('#pw').fill(`${process.env.NAVER_TEST_PW}`);
+    await page.locator('#id').fill(`${process.env.NAVER_ID}`);
+    await page.locator('#pw').fill(`${process.env.NAVER_PW}`);
     await page.locator('.btn_login').click();
     await page.goto(page.url());
     const params = new URLSearchParams(new URL(page.url()).search);
@@ -41,8 +43,6 @@ const playwright = async () => {
     browser.close();
     return {code : my_code, state: my_state}
 };
-//playwright block
-
 const runNaver = () => {
     const startPlaywright = () => {
         return new Promise( async (resolve, reject) => {
@@ -58,7 +58,7 @@ const runNaver = () => {
         const naver_code = res.code;
         const naver_state = res.state;
         const api_url = 
-        'https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id='+client_id+'&client_secret='+client_secret+'&redirect_uri='+redirectURI+'&code='+naver_code+'&state='+naver_state;
+        `${naver_oauth_url}/token?grant_type=authorization_code&client_id=`+client_id+'&client_secret='+client_secret+'&redirect_uri='+redirectURI+'&code='+naver_code+'&state='+naver_state;
         const response = await axios.get(api_url);
         const { access_token, refresh_token } = response.data;
         return { "ac_token" :access_token, "rf_token": refresh_token}
@@ -97,10 +97,11 @@ axios.post(`https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLI
 
 var twitch_id = ""; 
 var twitch_title;
+const mare_id = process.env.TWITCH_MARE_LOGIN_ID
 
 setInterval( async () => {
     try{
-        const response = await axios.get(`https://api.twitch.tv/helix/streams?user_id=${test_uset_id}`, {
+        const response = await axios.get(`https://api.twitch.tv/helix/streams?user_login=${mare_id}&user_login=well__bing`, {
             headers: {
                 Authorization: "Bearer "+ twitch_token,
                 "Client-Id": process.env.TWITCH_CLIENT_ID
@@ -114,6 +115,7 @@ setInterval( async () => {
                 twitch_title = response[0].title
                 subject = encodeURI(twitch_title)
                 runNaver()
+                console.log("naver 글 작성 완료!!")
             }
         }
     }catch(e) {
