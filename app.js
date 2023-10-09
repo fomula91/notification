@@ -112,14 +112,15 @@ axios.post(`https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLI
 
 var twitch_id = ""; 
 var twitch_title;
-const mare_id = process.env.TWITCH_MARE_LOGIN_ID
+const mare_login_id = process.env.TWITCH_MARE_LOGIN_ID
+const mare_id = process.env.TWITCH_MARE_ID
 
 setInterval( async () => {
     const offset = 1000 * 60 * 60 * 9;
     const koreaNow = new Date((new Date()).getTime() + offset);
 
     try{
-        const response = await axios.get(`https://api.twitch.tv/helix/streams?user_login=${mare_id}`, {
+        const response = await axios.get(`https://api.twitch.tv/helix/streams?user_id=${mare_id}`, {
             headers: {
                 Authorization: "Bearer "+ twitch_token,
                 "Client-Id": process.env.TWITCH_CLIENT_ID
