@@ -132,15 +132,16 @@ setInterval( async () => {
             console.log(response, "\n");
             if(response[0].id !== twitch_id){
                 twitch_id = response[0].id;
-                twitch_title = "[방송ON]"+response[0].title;
+                twitch_title = "[방송ON] "+response[0].title;
                 subject = encodeURI(twitch_title);
                 runNaver();
             }
         }
     }catch(e) {
         console.log(e,"interval error")
+        console.log(e.code, "intervel err code")
     }
-}, 5000)
+}, 10000)
 
 app.get('/callback', async (req, res) => {
     res.sendFile(__dirname+"/public/callback.html")
