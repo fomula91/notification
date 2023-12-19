@@ -10,7 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
-    "playwright": "^1.39.0"
+    "google-auth-library": "^9.4.1",
+    "googleapis": "^129.0.0",
+    "playwright": "^1.40.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.38.1",

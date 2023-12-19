@@ -6,20 +6,76 @@ const app = express();
 //미들웨어
 app.use(express.static('public'))
 app.use(express.json())
+
+const { google } =require('googleapis');
 const port = 3000;
 
 
 const client_id = process.env.NAVER_CLIENT_TEST_ID;
 const client_secret = process.env.NAVER_CLIENT_TEST_SECRET;
-const clubid = process.env.NAVER_MARE_ID;
-const menuid = process.env.NAVER_MARE_MENU_ID;
-const naver_oauth_url = process.env.NAVER_OAUTH
+const clubid = process.env.NAVER_CLUB_ID;
+const menuid = process.env.NAVER_CLUB_MENU_ID;
+const naver_oauth_url = process.env.NAVER_OAUTH;
+const youtubeAPI = process.env.YOUTUBE_API_KEY;
+const testChannelID = 'UCprVCScw22D3qY-K0OX48xA';
 var subject = encodeURI("생방송알림");
 var content = encodeURI(process.env.MARE_URL);
-console.log(content)
 
-const redirectURI = encodeURI("http://localhost:3000/callback")
-var api_url = ""
+const youtube = google.youtube({
+    version: 'v3',
+    auth: youtubeAPI,
+});
+
+let videoid
+try{
+    youtube.search.list(
+    {
+        part: 'id',
+        channelId: testChannelID,
+        eventType: 'live',
+        type: 'video'
+    }, (err, res) => {
+        if(err){
+            console.error('api 오류', err)
+            return
+        };
+
+        const items = res.data.items;
+
+        if( items && items.length > 0){
+            console.log('실시간 스트리밍')
+            console.log(items)
+            console.log(items[0].id.videoId)
+            videoid = items[0].id.videoId
+
+            try {
+                youtube.videos.list({
+                    part: 'snippet',
+                    id: videoid
+                }, (err, res) => {
+                    if(err){
+                        console.error("API 오류", err)
+                        return;
+                    }
+                    const videoInfo = res.data.items[0].snippet;
+                    console.log('동영상 제목:', videoInfo.title);
+                    console.log('동영상 설명:', videoInfo.description);
+                })
+            } catch(e){
+                console.log(e)
+            }
+        } else(
+            console.log('스트리밍 없슴')
+        )
+    })
+}catch(e){
+    console.log(e)
+}
+
+
+
+const redirectURI = encodeURI("http://localhost:3000/callback");
+var api_url = "";
 
 const state = Math.random().toString(36).substring(2,15);
 api_url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${client_id}&redirect_uri=${redirectURI}&state=${state}`;
@@ -30,17 +86,24 @@ const playwright = async () => {
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.goto(api_url);
-    await page.locator('#id').fill(process.env.NAVER_TEST_ID);
-    await page.locator('#pw').fill(process.env.NAVER_TEST_PW);
+    await page.locator('#id').fill(process.env.NAVER_ID);
+    await page.locator('#pw').fill(process.env.NAVER_PW);
     await page.locator('.btn_login').click();
+    
+    
+    if(page.getByLabel('전체 동의하기')){
+        await page.locator('.check_all').click();
+        await page.locator('.agree').click();
+    }
+
     await page.goto(page.url());
     const params = new URLSearchParams(new URL(page.url()).search);
     const state_value = params.get('state');
-    const code_value = params.get('code')
+    const code_value = params.get('code');
     my_code = code_value;
     my_state = state_value;
 
-    // browser.close();
+    browser.close();
     justChrom = browser;
     return {code : my_code, state: my_state}
 };
