@@ -90,11 +90,12 @@ const playwright = async () => {
     await page.locator('#pw').fill(process.env.NAVER_PW);
     await page.locator('.btn_login').click();
     
-    
-    if(page.getByLabel('전체 동의하기')){
-        await page.locator('.check_all').click();
-        await page.locator('.agree').click();
-    }
+    // console.log(page.getByLabel('전체 동의하기'))
+    // if(page.getByLabel('전체 동의하기')){
+    //     console.log("hello")
+    //     await page.locator('.check_all').click();
+    //     await page.locator('.agree').click();
+    // }
 
     await page.goto(page.url());
     const params = new URLSearchParams(new URL(page.url()).search);
@@ -102,8 +103,7 @@ const playwright = async () => {
     const code_value = params.get('code');
     my_code = code_value;
     my_state = state_value;
-
-    browser.close();
+    console.log('playwright', my_code, my_state);
     justChrom = browser;
     return {code : my_code, state: my_state}
 };
@@ -164,26 +164,44 @@ const runNaver = () => {
 
 
 // twitch api
-const test_uset_id = process.env.TEST_USER_ID
+const TWITCHID = process.env.TWITCH_CLIENT_ID;
+const TWITCHKEY = process.env.TWITCH_SECRET_KEY;
 let twitch_token;
-let flag = false;
-axios.post(`https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_SECRET_KEY}&grant_type=client_credentials`)
-.then((res) => {
-    twitch_token = res.data.access_token
-    flag = true
-})
+
+const getTWitchToken = () => {
+    axios.post(`https://id.twitch.tv/oauth2/token?client_id=${TWITCHID}&client_secret=${TWITCHKEY}&grant_type=client_credentials`)
+    .then((res) => {
+        twitch_token = res.data.access_token
+        setTimeout(getTWitchToken, 12 * 60 * 60 * 1000);
+    })
+};
+getTWitchToken();
+
+
+
 
 var twitch_id = ""; 
 var twitch_title;
-const mare_login_id = process.env.TWITCH_MARE_LOGIN_ID
-const mare_id = process.env.TWITCH_MARE_ID
 
-setInterval( async () => {
+const mare_id = process.env.TWITCH_MARE_ID
+const test_id = process.env.TEST_USER_ID
+
+const koreaTime = () => {
     const offset = 1000 * 60 * 60 * 9;
     const koreaNow = new Date((new Date()).getTime() + offset);
+    console.log(koreaNow.toISOString().replace("T", " ").split('.')[0]);
+}
 
+const getTwitchLive = async () => {
     try{
-        const response = await axios.get(`https://api.twitch.tv/helix/streams?user_id=${mare_id}`, {
+        if(twitch_token){
+            console.log("token get")
+        }else{
+            console.log('no token')
+            setTimeout(getTwitchLive, 10000);
+            return;
+        }
+        const response = await axios.get(`https://api.twitch.tv/helix/streams?user_id=${mare_id}&user_id=${test_id}`, {
             headers: {
                 Authorization: "Bearer "+ twitch_token,
                 "Client-Id": process.env.TWITCH_CLIENT_ID
@@ -191,20 +209,33 @@ setInterval( async () => {
         })
         .then((res) => res.data.data);
         if (response.length > 0) {
-            console.log(koreaNow.toISOString().replace("T", " ").split('.')[0]);
-            console.log(response, "\n");
+            koreaTime();
             if(response[0].id !== twitch_id){
                 twitch_id = response[0].id;
                 twitch_title = "[방송ON] "+response[0].title;
                 subject = encodeURI(twitch_title);
+                sendMessageTG(twitch_title)
                 runNaver();
             }
         }
+        setTimeout(getTwitchLive, 10000);
     }catch(e) {
         console.log(e,"interval error")
         console.log(e.code, "intervel err code")
+        sendMessageTG(e)
+        setTimeout(getTwitchLive, 10000);
     }
-}, 10000)
+}
+getTwitchLive();
+
+const sendMessageTG = async (data) => {
+    const botToken = process.env.TELEGRAM_ID
+    const chatID = process.env.TELEGRAM_CHAT_ID
+
+    axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`,
+     {'chat_id': chatID, "text": data.toString()} )
+    
+}
 
 app.get('/callback', async (req, res) => {
     res.sendFile(__dirname+"/public/callback.html")
