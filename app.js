@@ -13,11 +13,11 @@ const port = 3000;
 
 const client_id = process.env.NAVER_CLIENT_TEST_ID;
 const client_secret = process.env.NAVER_CLIENT_TEST_SECRET;
-const clubid = process.env.NAVER_CLUB_ID;
-const menuid = process.env.NAVER_CLUB_MENU_ID;
-const naver_oauth_url = process.env.NAVER_OAUTH;
+const clubid = process.env.NAVER_MARE_ID;
+const menuid = process.env.NAVER_MARE_MENU_ID;
+
 const youtubeAPI = process.env.YOUTUBE_API_KEY;
-const testChannelID = 'UCprVCScw22D3qY-K0OX48xA';
+const testChannelID = process.env.YOUTUBE_TEST;
 var subject = encodeURI("생방송알림");
 var content = encodeURI(process.env.MARE_URL);
 
@@ -173,6 +173,7 @@ const getTWitchToken = () => {
     .then((res) => {
         twitch_token = res.data.access_token
         setTimeout(getTWitchToken, 12 * 60 * 60 * 1000);
+        sendMessageTG("트위치 로그인 정보 갱신!")
     })
 };
 getTWitchToken();
