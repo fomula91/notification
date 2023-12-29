@@ -13,8 +13,8 @@ const port = 3000;
 
 const client_id = process.env.NAVER_CLIENT_TEST_ID;
 const client_secret = process.env.NAVER_CLIENT_TEST_SECRET;
-const clubid = process.env.NAVER_MARE_ID;
-const menuid = process.env.NAVER_MARE_MENU_ID;
+const clubid = process.env.NAVER_CLUB_ID;
+const menuid = process.env.NAVER_CLUB_MENU_ID;
 
 const youtubeAPI = process.env.YOUTUBE_API_KEY;
 const testChannelID = process.env.YOUTUBE_TEST;
@@ -163,6 +163,42 @@ const runNaver = () => {
 // runNaver();
 
 
+let chzzkLiveID;
+const chzzkKeyword = encodeURI('마레플로스')
+const getChzzkLive = () => {
+    // console.log('hello chzzk api!')
+    try{
+        axios.get(`https://api.chzzk.naver.com/service/v1/search/channels?keyword=${chzzkKeyword}&offset=0&size=13&withFirstChannelContent=true`)
+        .then((res) => {
+        const result = res.data.content.data
+        if(result[0].content.live !== null && result[0].channel.openLive === true){
+            const liveID = result[0].content.live.liveId 
+            if(chzzkLiveID !== liveID){
+                // console.log('live alive!!');
+                console.log(result[0])
+                chzzkLiveID = liveID;
+                subject = encodeURI("[치..지직...] "+result[0].content.live.liveTitle)
+                content = encodeURI("https://chzzk.naver.com/live/4ebef1eb4194611996dc38abf1d226d1");
+                runNaver();
+                setTimeout(getChzzkLive, 10000);
+                sendMessageTG("[치지직]"+result[0].content.live.liveTitle)
+            }
+            else {
+                setTimeout(getChzzkLive, 10000);
+            }
+            
+        }
+    })
+    } catch(e) {
+        console.log(e);
+        sendMessageTG('치지...직... :: \n', e);
+    }
+    
+    
+}
+getChzzkLive();
+
+
 // twitch api
 const TWITCHID = process.env.TWITCH_CLIENT_ID;
 const TWITCHKEY = process.env.TWITCH_SECRET_KEY;
@@ -215,7 +251,7 @@ const getTwitchLive = async () => {
                 twitch_id = response[0].id;
                 twitch_title = "[방송ON] "+response[0].title;
                 subject = encodeURI(twitch_title);
-                sendMessageTG(twitch_title)
+                sendMessageTG("[트위치]"+twitch_title)
                 runNaver();
             }
         }
@@ -227,7 +263,9 @@ const getTwitchLive = async () => {
         setTimeout(getTwitchLive, 10000);
     }
 }
-getTwitchLive();
+
+//트위치 get videos
+//getTwitchLive();
 
 const sendMessageTG = async (data) => {
     const botToken = process.env.TELEGRAM_ID
