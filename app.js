@@ -13,8 +13,8 @@ const port = 3000;
 
 const client_id = process.env.NAVER_CLIENT_TEST_ID;
 const client_secret = process.env.NAVER_CLIENT_TEST_SECRET;
-const clubid = process.env.NAVER_CLUB_ID;
-const menuid = process.env.NAVER_CLUB_MENU_ID;
+const clubid = process.env.NAVER_MARE_ID;
+const menuid = process.env.NAVER_MARE_MENU_ID;
 
 const youtubeAPI = process.env.YOUTUBE_API_KEY;
 const testChannelID = process.env.YOUTUBE_TEST;
@@ -204,15 +204,23 @@ const TWITCHID = process.env.TWITCH_CLIENT_ID;
 const TWITCHKEY = process.env.TWITCH_SECRET_KEY;
 let twitch_token;
 
-const getTWitchToken = () => {
-    axios.post(`https://id.twitch.tv/oauth2/token?client_id=${TWITCHID}&client_secret=${TWITCHKEY}&grant_type=client_credentials`)
-    .then((res) => {
-        twitch_token = res.data.access_token
-        setTimeout(getTWitchToken, 12 * 60 * 60 * 1000);
-        sendMessageTG("트위치 로그인 정보 갱신!")
-    })
+const getTwitchToken = () => {
+    try {
+        axios.post(`https://id.twitch.tv/oauth2/token?client_id=${TWITCHID}&client_secret=${TWITCHKEY}&grant_type=client_credentials`)
+        .then((res) => {
+            twitch_token = res.data.access_token
+            setTimeout(getTWitchToken, 12 * 60 * 60 * 1000);
+            sendMessageTG("트위치 로그인 정보 갱신!")
+        })
+    } catch(e) {
+        console.log('fail Twitch token');
+        sendMessageTG("fail Twitch Token :: \n"+ e)
+
+    }
+
+    
 };
-getTWitchToken();
+getTwitchToken();
 
 
 
@@ -257,9 +265,11 @@ const getTwitchLive = async () => {
         }
         setTimeout(getTwitchLive, 10000);
     }catch(e) {
-        console.log(e,"interval error")
-        console.log(e.code, "intervel err code")
-        sendMessageTG(e)
+        console.log(e,"interval error \n");
+        console.log(e.code, "intervel err code \n");
+        console.log(e.response, "interval err response \n");
+        
+        sendMessageTG(e);
         setTimeout(getTwitchLive, 10000);
     }
 }
