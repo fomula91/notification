@@ -209,7 +209,7 @@ const getTwitchToken = () => {
         axios.post(`https://id.twitch.tv/oauth2/token?client_id=${TWITCHID}&client_secret=${TWITCHKEY}&grant_type=client_credentials`)
         .then((res) => {
             twitch_token = res.data.access_token
-            setTimeout(getTWitchToken, 12 * 60 * 60 * 1000);
+            setTimeout(getTwitchToken, 12 * 60 * 60 * 1000);
             sendMessageTG("트위치 로그인 정보 갱신!")
         })
     } catch(e) {
