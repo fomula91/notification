@@ -1,4 +1,6 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const axios = require('axios');
 const { chromium } = require('playwright');
 require('dotenv').config();
@@ -10,19 +12,15 @@ app.use(express.json());
 const { google } = require('googleapis');
 const port = 3000;
 
-const notiImage = require('./assets/images.json');
-const fs = require('fs');
-const path = require('path');
 const htmlFilePath = path.join(__dirname, 'src', 'body.html');
 const htmlString = fs.readFileSync(htmlFilePath, 'utf8');
 const htmlWithoutNewlines = htmlString.replace(/\n/g, '');
-console.log("html string :::: ", htmlWithoutNewlines);
 
 
 const Nclient_id = process.env.NAVER_CLIENT_TEST_ID;
 const Nclient_secret = process.env.NAVER_CLIENT_TEST_SECRET;
-const clubid = process.env.NAVER_CLUB_ID;
-const menuid = process.env.NAVER_CLUB_MENU_ID;
+const clubid = process.env.NAVER_MARE_ID;
+const menuid = process.env.NAVER_MARE_MENU_ID;
 
 const youtubeAPI = process.env.YOUTUBE_API_KEY;
 const crenentials = require('./credentials.json');
@@ -199,13 +197,12 @@ const runNaver = () => {
 
 let chzzkLiveID;
 const chzzkKeyword = encodeURI('마레플로스');
-const testKeword = encodeURI('풍월량월풍월량');
 const getChzzkLive = () => {
   console.log('hello chzzk api!');
   try {
     axios
       .get(
-        `https://api.chzzk.naver.com/service/v1/search/channels?keyword=${testKeword}&offset=0&size=13&withFirstChannelContent=true`
+        `https://api.chzzk.naver.com/service/v1/search/channels?keyword=${chzzkKeyword}&offset=0&size=13&withFirstChannelContent=true`
       )
       .then((res) => {
         const result = res.data.content.data;
