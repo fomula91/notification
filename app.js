@@ -227,10 +227,14 @@ const getChzzkLive = () => {
             console.log('현재 치지직 아이디와 저장된 치지직 아이디가 같음');
           }
         }
+        else{
+            setTimeout(getChzzkLive, 10000);
+            console.log('치지직 방송 정보 없음.. 다시 탐색합니다.')
+        }
       });
   } catch (e) {
     console.log(e);
-    sendMessageTG('치지...직... :: \n', e);
+    sendMessageTG('치지직 오류!! :: \n', e);
   }
 };
 getChzzkLive();
