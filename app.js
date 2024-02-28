@@ -192,7 +192,7 @@ const runNaver = () => {
 // playwright();
 // runNaver();
 
-getChzzkLive(runNaver, sendMessageTG);
+getChzzkLive(runNaver, sendMessageTG, htmlWithoutNewlines);
 
 // // twitch api
 // const TWITCHID = process.env.TWITCH_CLIENTID;

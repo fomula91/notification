@@ -1,5 +1,5 @@
 const axios = require("axios");
-const getChzzkLive = (runNaver, sendMessageTG) => {
+const getChzzkLive = (runNaver, sendMessageTG, HTML) => {
   let chzzkLiveID;
   const streamerKeyword = encodeURI("마레플로스");
   const api = "https://api.chzzk.naver.com/service/v1/search/channels";
@@ -22,16 +22,16 @@ const getChzzkLive = (runNaver, sendMessageTG) => {
           subject = encodeURI(
             `[방송ON][치지직] ${result[0].content.live.liveTitle}`
           );
-          content = encodeURI(htmlWithoutNewlines);
+          content = encodeURI(HTML);
           runNaver();
-          setTimeout(getChzzkLive, 10000);
+          setTimeout(getChzzkLive(runNaver, sendMessageTG, HTML), 10000);
           sendMessageTG(`[치지직]${result[0].content.live.liveTitle}`);
         } else {
-          setTimeout(getChzzkLive, 10000);
+          setTimeout(getChzzkLive(runNaver, sendMessageTG, HTML), 10000);
           console.log("현재 치지직 아이디와 저장된 치지직 아이디가 같음");
         }
       } else {
-        setTimeout(getChzzkLive, 10000);
+        setTimeout(getChzzkLive(runNaver, sendMessageTG, HTML), 10000);
         console.log("치지직 방송 정보 없음.. 다시 탐색합니다.");
       }
     })
