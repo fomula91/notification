@@ -10,7 +10,7 @@ const app = express();
 app.use(express.static("public"));
 app.use(express.json());
 
-const { google } = require("googleapis");
+// const { google } = require("googleapis");
 
 const port = 3000;
 
@@ -23,91 +23,100 @@ const NclientSecret = process.env.NAVER_CLIENT_TEST_SECRET;
 const clubid = process.env.NAVER_CLUB_ID;
 const menuid = process.env.NAVER_CLUB_MENU_ID;
 
-const youtubeAPI = process.env.YOUTUBE_API_KEY;
+// const youtubeAPI = process.env.YOUTUBE_API_KEY;
 const { OAuth2Client } = require("google-auth-library");
+/* eslint-disable node/no-unpublished-require */
 const crenentials = require("./credentials.json");
 
 const { clientid, clientsecret, redirecturis } = crenentials.web;
-console.log(crenentials.web, "클라이언트 id 구글");
-const testChannelID = process.env.MARE_YOUTUBE_ID;
+// const testChannelID = process.env.MARE_YOUTUBE_ID;
 let subject = encodeURI("생방송알림");
 let content = encodeURI(process.env.MARE_URL);
 
 const oAuth2Client = new OAuth2Client(clientid, clientsecret, redirecturis);
 
 const SCOPE = ["https://www.googleapis.com/auth/youtube.readonly"];
-let videoid;
 
-const getYoutube = () => {
-  const youtube = google.youtube({
-    version: "v3",
-    auth: oAuth2Client,
+const sendMessageTG = async (data) => {
+  const botToken = process.env.TELEGRAM_ID;
+  const chatID = process.env.TELEGRAM_CHAT_ID;
+
+  axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    chat_id: chatID,
+    text: data.toString(),
   });
-  try {
-    youtube.search.list(
-      {
-        part: "id",
-        channelId: testChannelID,
-        eventType: "live",
-        type: "video",
-      },
-      (err, res) => {
-        if (err) {
-          console.error("api 오류", err);
-          return;
-        }
-
-        const { items } = res.data;
-
-        if (items && items.length > 0) {
-          console.log("실시간 스트리밍");
-          console.log(items);
-          console.log(items[0].id.videoId);
-          videoid = items[0].id.videoId;
-
-          try {
-            youtube.videos.list(
-              {
-                part: "snippet",
-                id: videoid,
-              },
-              (err, res) => {
-                if (err) {
-                  console.error("API 오류", err);
-                  return;
-                }
-                const videoInfo = res.data.items[0].snippet;
-                console.log("동영상 제목:", videoInfo.title);
-                console.log("동영상 설명:", videoInfo.description);
-              }
-            );
-          } catch (e) {
-            console.log(e);
-          }
-        } else console.log("스트리밍 없슴");
-      }
-    );
-    console.log("다시 탐색합니다...");
-    // setTimeout(getYoutube, 10000);
-  } catch (e) {
-    console.log(e);
-  }
 };
+
+// let videoid;
+
+// const getYoutube = () => {
+//   const youtube = google.youtube({
+//     version: "v3",
+//     auth: oAuth2Client,
+//   });
+//   try {
+//     youtube.search.list(
+//       {
+//         part: "id",
+//         channelId: testChannelID,
+//         eventType: "live",
+//         type: "video",
+//       },
+//       (err, res) => {
+//         if (err) {
+//           console.error("api 오류", err);
+//           return;
+//         }
+
+//         const { items } = res.data;
+
+//         if (items && items.length > 0) {
+//           console.log("실시간 스트리밍");
+//           console.log(items);
+//           console.log(items[0].id.videoId);
+//           videoid = items[0].id.videoId;
+
+//           try {
+//             youtube.videos.list(
+//               {
+//                 part: "snippet",
+//                 id: videoid,
+//               },
+//               (err, res) => {
+//                 if (err) {
+//                   console.error("API 오류", err);
+//                   return;
+//                 }
+//                 const videoInfo = res.data.items[0].snippet;
+//                 console.log("동영상 제목:", videoInfo.title);
+//                 console.log("동영상 설명:", videoInfo.description);
+//               }
+//             );
+//           } catch (e) {
+//             console.log(e);
+//           }
+//         } else console.log("스트리밍 없슴");
+//       }
+//     );
+//     console.log("다시 탐색합니다...");
+//     // setTimeout(getYoutube, 10000);
+//   } catch (e) {
+//     console.log(e);
+//   }
+// };
 // getYoutube();
 
 const redirectURI = encodeURI("http://localhost:3000/callback");
-let api_url = "";
+let naverapiurl = "";
 
 const state = Math.random().toString(36).substring(2, 15);
-api_url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&clientid=${NclientId}&redirect_uri=${redirectURI}&state=${state}`;
+naverapiurl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&clientid=${NclientId}&redirect_uri=${redirectURI}&state=${state}`;
 let justChrom;
 const playwright = async () => {
-  let my_code;
-  let my_state;
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
   const page = await context.newPage();
-  await page.goto(api_url);
+  await page.goto(naverapiurl);
   await page.locator("#id").fill(process.env.NAVER_ID);
   await page.locator("#pw").fill(process.env.NAVER_PW);
   await page.locator(".btn_login").click();
@@ -121,42 +130,36 @@ const playwright = async () => {
 
   await page.goto(page.url());
   const params = new URLSearchParams(new URL(page.url()).search);
-  const state_value = params.get("state");
-  const code_value = params.get("code");
-  my_code = code_value;
-  my_state = state_value;
-  console.log("playwright", my_code, my_state);
+  const statevalue = params.get("state");
+  const codevalue = params.get("code");
   justChrom = browser;
-  return { code: my_code, state: my_state };
+  return { code: codevalue, state: statevalue };
 };
 const runNaver = () => {
   const startPlaywright = () =>
-    new Promise(async (resolve, reject) => {
-      try {
-        await playwright().then((res) => resolve(res));
-      } catch (e) {
-        reject(e, "reject");
-      }
+    new Promise((resolve, reject) => {
+      playwright().then(resolve).catch(reject);
     });
+
   startPlaywright()
     .then(async (res) => {
-      const naver_code = res.code;
-      const naver_state = res.state;
+      const naverCode = res.code;
+      const naverState = res.state;
       const headers = {
         "X-Naver-Client-Id": NclientId,
         "X-Naver-Client-Secret": NclientSecret,
       };
-      const api_url = `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&clientid=${NclientId}&clientsecret=${NclientSecret}&redirect_uri=${redirectURI}&code=${naver_code}&state=${naver_state}`;
-      const response = await axios.get(api_url, {
+      const apiUrl = `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&clientid=${NclientId}&clientsecret=${NclientSecret}&redirect_uri=${redirectURI}&code=${naverCode}&state=${naverState}`;
+      const response = await axios.get(apiUrl, {
         headers,
       });
-      const { access_token, refresh_token } = response.data;
-      console.log(response.data, "data");
-      return { ac_token: access_token, rf_token: refresh_token };
+      const { accessToken, refreshToken } = response.data;
+
+      return { ac_token: accessToken, rf_token: refreshToken };
     })
     .then(async (res) => {
       const ac = res.ac_token;
-      const api_url = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
+      const apiUrl = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
       const token = `Bearer ${ac}`;
       const headers = {
         Authorization: token,
@@ -164,7 +167,7 @@ const runNaver = () => {
       };
       try {
         const result = await axios.post(
-          api_url,
+          apiUrl,
           {
             subject,
             content,
@@ -229,94 +232,84 @@ const getChzzkLive = () => {
 };
 getChzzkLive();
 
-// twitch api
-const TWITCHID = process.env.TWITCH_CLIENTID;
-const TWITCHKEY = process.env.TWITCH_SECRET_KEY;
-let twitch_token;
+// // twitch api
+// const TWITCHID = process.env.TWITCH_CLIENTID;
+// const TWITCHKEY = process.env.TWITCH_SECRET_KEY;
+// let twitch_token;
 
-const getTwitchToken = () => {
-  try {
-    axios
-      .post(
-        `https://id.twitch.tv/oauth2/token?clientid=${TWITCHID}&clientsecret=${TWITCHKEY}&grant_type=client_credentials`
-      )
-      .then((res) => {
-        twitch_token = res.data.access_token;
-        setTimeout(getTwitchToken, 12 * 60 * 60 * 1000);
-        sendMessageTG("트위치 로그인 정보 갱신!");
-      });
-  } catch (e) {
-    console.log("fail Twitch token");
-    sendMessageTG(`fail Twitch Token :: \n${e}`);
-  }
-};
-// getTwitchToken();
+// const getTwitchToken = () => {
+//   try {
+//     axios
+//       .post(
+//         `https://id.twitch.tv/oauth2/token?clientid=${TWITCHID}&clientsecret=${TWITCHKEY}&grant_type=client_credentials`
+//       )
+//       .then((res) => {
+//         twitch_token = res.data.accesstoken;
+//         setTimeout(getTwitchToken, 12 * 60 * 60 * 1000);
+//         sendMessageTG("트위치 로그인 정보 갱신!");
+//       });
+//   } catch (e) {
+//     console.log("fail Twitch token");
+//     sendMessageTG(`fail Twitch Token :: \n${e}`);
+//   }
+// };
+// // getTwitchToken();
 
-let twitch_id = "";
-let twitch_title;
+// let twitch_id = "";
+// let twitch_title;
 
-const mare_id = process.env.TWITCH_MARE_ID;
-const test_id = process.env.TEST_USER_ID;
+// const mare_id = process.env.TWITCH_MARE_ID;
+// const test_id = process.env.TEST_USER_ID;
 
-const koreaTime = () => {
-  const offset = 1000 * 60 * 60 * 9;
-  const koreaNow = new Date(new Date().getTime() + offset);
-  console.log(koreaNow.toISOString().replace("T", " ").split(".")[0]);
-};
+// const koreaTime = () => {
+//   const offset = 1000 * 60 * 60 * 9;
+//   const koreaNow = new Date(new Date().getTime() + offset);
+//   console.log(koreaNow.toISOString().replace("T", " ").split(".")[0]);
+// };
 
-const getTwitchLive = async () => {
-  try {
-    if (twitch_token) {
-      console.log("token get");
-    } else {
-      console.log("no token");
-      setTimeout(getTwitchLive, 10000);
-      return;
-    }
-    const response = await axios
-      .get(
-        `https://api.twitch.tv/helix/streams?user_id=${mare_id}&user_id=${test_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${twitch_token}`,
-            "Client-Id": process.env.TWITCH_CLIENTID,
-          },
-        }
-      )
-      .then((res) => res.data.data);
-    if (response.length > 0) {
-      koreaTime();
-      if (response[0].id !== twitch_id) {
-        twitch_id = response[0].id;
-        twitch_title = `[방송ON] ${response[0].title}`;
-        subject = encodeURI(twitch_title);
-        sendMessageTG(`[트위치]${twitch_title}`);
-        runNaver();
-      }
-    }
-    setTimeout(getTwitchLive, 10000);
-  } catch (e) {
-    console.log(e, "interval error \n");
-    console.log(e.code, "intervel err code \n");
-    console.log(e.response, "interval err response \n");
+// const getTwitchLive = async () => {
+//   try {
+//     if (twitch_token) {
+//       console.log("token get");
+//     } else {
+//       console.log("no token");
+//       setTimeout(getTwitchLive, 10000);
+//       return;
+//     }
+//     const response = await axios
+//       .get(
+//         `https://api.twitch.tv/helix/streams?user_id=${mare_id}&user_id=${test_id}`,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${twitch_token}`,
+//             "Client-Id": process.env.TWITCH_CLIENTID,
+//           },
+//         }
+//       )
+//       .then((res) => res.data.data);
+//     if (response.length > 0) {
+//       koreaTime();
+//       if (response[0].id !== twitch_id) {
+//         twitch_id = response[0].id;
+//         twitch_title = `[방송ON] ${response[0].title}`;
+//         subject = encodeURI(twitch_title);
+//         sendMessageTG(`[트위치]${twitch_title}`);
+//         runNaver();
+//       }
+//     }
+//     setTimeout(getTwitchLive, 10000);
+//   } catch (e) {
+//     console.log(e, "interval error \n");
+//     console.log(e.code, "intervel err code \n");
+//     console.log(e.response, "interval err response \n");
 
-    sendMessageTG(e);
-    setTimeout(getTwitchLive, 10000);
-  }
-};
+//     sendMessageTG(e);
+//     setTimeout(getTwitchLive, 10000);
+//   }
+// };
 
 // 트위치 get videos
 // getTwitchLive();
-
-const sendMessageTG = async (data) => {
-  const botToken = process.env.TELEGRAM_ID;
-  const chatID = process.env.TELEGRAM_CHAT_ID;
-
-  axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    chat_id: chatID,
-    text: data.toString(),
-  });
-};
 
 app.get("/callback", async (req, res) => {
   res.sendFile(`${__dirname}/public/callback.html`);
@@ -336,8 +329,8 @@ app.get("/oauth2callback", async (req, res) => {
   try {
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
-    console.log(`a Token :: ${tokens.access_token}`);
-    console.log(`r Token :: ${tokens.refresh_token}`);
+    console.log(`a Token :: ${tokens.accesstoken}`);
+    console.log(`r Token :: ${tokens.refreshtoken}`);
     console.log("인증 완료");
     res.redirect("/");
   } catch (e) {
