@@ -1,0 +1,6 @@
+credentials.json
+node_modules
+dist
+build
+config.js
+src/vendor
