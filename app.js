@@ -6,6 +6,7 @@ const { chromium } = require("playwright");
 require("dotenv").config();
 
 const getChzzkLive = require("./src/chizzik");
+const getTwitchLive = require("./src/twitch");
 
 const app = express();
 // 미들웨어
@@ -27,7 +28,7 @@ const menuid = process.env.NAVER_CLUB_MENU_ID;
 let subject = encodeURI("생방송알림");
 let content = encodeURI(process.env.MARE_URL);
 
-const oAuth2Client = new OAuth2Client(clientid, clientsecret, redirecturis);
+// const oAuth2Client = new OAuth2Client(clientid, clientsecret, redirecturis);
 
 const sendMessageTG = async (data) => {
   const botToken = process.env.TELEGRAM_ID;
@@ -123,35 +124,36 @@ const runNaver = () => {
 // playwright();
 // runNaver();
 
-getChzzkLive(runNaver, sendMessageTG, htmlWithoutNewlines);
+// getChzzkLive(runNaver, sendMessageTG, htmlWithoutNewlines);
+getTwitchLive();
 
 app.get("/callback", async (req, res) => {
   res.sendFile(`${__dirname}/public/callback.html`);
 });
 
-app.get("/youtube", async (req, res) => {
-  const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: "offline",
-    scope: SCOPE,
-  });
-  res.redirect(authUrl);
-});
+// app.get("/youtube", async (req, res) => {
+//   const authUrl = oAuth2Client.generateAuthUrl({
+//     access_type: "offline",
+//     scope: SCOPE,
+//   });
+//   res.redirect(authUrl);
+// });
 
-app.get("/oauth2callback", async (req, res) => {
-  const { code } = req.query;
-  console.log(req.query.code, "hello code");
-  try {
-    const { tokens } = await oAuth2Client.getToken(code);
-    oAuth2Client.setCredentials(tokens);
-    console.log(`a Token :: ${tokens.accesstoken}`);
-    console.log(`r Token :: ${tokens.refreshtoken}`);
-    console.log("인증 완료");
-    res.redirect("/");
-  } catch (e) {
-    console.error("토큰 얻기 오류:", e);
-    res.status(500).send("토큰을 얻는 도중 오류가 발생했습니다.");
-  }
-});
+// app.get("/oauth2callback", async (req, res) => {
+//   const { code } = req.query;
+//   console.log(req.query.code, "hello code");
+//   try {
+//     const { tokens } = await oAuth2Client.getToken(code);
+//     oAuth2Client.setCredentials(tokens);
+//     console.log(`a Token :: ${tokens.accesstoken}`);
+//     console.log(`r Token :: ${tokens.refreshtoken}`);
+//     console.log("인증 완료");
+//     res.redirect("/");
+//   } catch (e) {
+//     console.error("토큰 얻기 오류:", e);
+//     res.status(500).send("토큰을 얻는 도중 오류가 발생했습니다.");
+//   }
+// });
 
 app.listen(port, () => {
   console.log(`서버가 실행됩니다. http://localhost:${port}`);

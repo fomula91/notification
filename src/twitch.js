@@ -1,18 +1,24 @@
+const sendMessageTG = require("./sendTG");
+const axios = require("axios");
+
 // twitch api
-const TWITCHID = process.env.TWITCH_CLIENTID;
+const TWITCHID = process.env.TWITCH_CLIENT_ID;
 const TWITCHKEY = process.env.TWITCH_SECRET_KEY;
-let twitch_token;
 
 const getTwitchToken = () => {
   try {
     axios
       .post(
-        `https://id.twitch.tv/oauth2/token?clientid=${TWITCHID}&clientsecret=${TWITCHKEY}&grant_type=client_credentials`
+        `https://id.twitch.tv/oauth2/token?client_id=${TWITCHID}&client_secret=${TWITCHKEY}&grant_type=client_credentials`
       )
       .then((res) => {
-        twitch_token = res.data.accesstoken;
         setTimeout(getTwitchToken, 12 * 60 * 60 * 1000);
         sendMessageTG("트위치 로그인 정보 갱신!");
+        console.log("token is here!! \n ", res.data.access_token);
+        return res.data.access_token;
+      })
+      .catch((e) => {
+        console.log(e, "hello");
       });
   } catch (e) {
     console.log("fail Twitch token");
@@ -33,6 +39,9 @@ const koreaTime = () => {
 };
 
 const getTwitchLive = async () => {
+  const twitch_token = await getTwitchToken();
+  console.log(twitch_token);
+
   try {
     if (twitch_token) {
       console.log("token get");
@@ -51,15 +60,18 @@ const getTwitchLive = async () => {
           },
         }
       )
-      .then((res) => res.data.data);
+      .then((res) => {
+        console.log(res);
+        return res.data.data;
+      });
     if (response.length > 0) {
       koreaTime();
       if (response[0].id !== twitch_id) {
-        twitch_id = response[0].id;
-        twitch_title = `[방송ON] ${response[0].title}`;
-        subject = encodeURI(twitch_title);
+        // twitch_id = response[0].id;
+        // twitch_title = `[방송ON] ${response[0].title}`;
+        // subject = encodeURI(twitch_title);
         sendMessageTG(`[트위치]${twitch_title}`);
-        runNaver();
+        // runNaver();
       }
     }
     setTimeout(getTwitchLive, 10000);
