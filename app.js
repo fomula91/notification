@@ -36,61 +36,61 @@ const oAuth2Client = new OAuth2Client(client_id, client_secret, redirect_uris);
 const SCOPE = ['https://www.googleapis.com/auth/youtube.readonly'];
 let videoid;
 
-const getYoutube = () => {
-  const youtube = google.youtube({
-    version: 'v3',
-    auth: oAuth2Client
-  });
-  try {
-    youtube.search.list(
-      {
-        part: 'id',
-        channelId: testChannelID,
-        eventType: 'live',
-        type: 'video'
-      },
-      (err, res) => {
-        if (err) {
-          console.error('api 오류', err);
-          return;
-        }
+// const getYoutube = () => {
+//   const youtube = google.youtube({
+//     version: 'v3',
+//     auth: oAuth2Client
+//   });
+//   try {
+//     youtube.search.list(
+//       {
+//         part: 'id',
+//         channelId: testChannelID,
+//         eventType: 'live',
+//         type: 'video'
+//       },
+//       (err, res) => {
+//         if (err) {
+//           console.error('api 오류', err);
+//           return;
+//         }
 
-        const items = res.data.items;
+//         const items = res.data.items;
 
-        if (items && items.length > 0) {
-          console.log('실시간 스트리밍');
-          console.log(items);
-          console.log(items[0].id.videoId);
-          videoid = items[0].id.videoId;
+//         if (items && items.length > 0) {
+//           console.log('실시간 스트리밍');
+//           console.log(items);
+//           console.log(items[0].id.videoId);
+//           videoid = items[0].id.videoId;
 
-          try {
-            youtube.videos.list(
-              {
-                part: 'snippet',
-                id: videoid
-              },
-              (err, res) => {
-                if (err) {
-                  console.error('API 오류', err);
-                  return;
-                }
-                const videoInfo = res.data.items[0].snippet;
-                console.log('동영상 제목:', videoInfo.title);
-                console.log('동영상 설명:', videoInfo.description);
-              }
-            );
-          } catch (e) {
-            console.log(e);
-          }
-        } else console.log('스트리밍 없슴');
-      }
-    );
-    console.log('다시 탐색합니다...');
-    // setTimeout(getYoutube, 10000);
-  } catch (e) {
-    console.log(e);
-  }
-};
+//           try {
+//             youtube.videos.list(
+//               {
+//                 part: 'snippet',
+//                 id: videoid
+//               },
+//               (err, res) => {
+//                 if (err) {
+//                   console.error('API 오류', err);
+//                   return;
+//                 }
+//                 const videoInfo = res.data.items[0].snippet;
+//                 console.log('동영상 제목:', videoInfo.title);
+//                 console.log('동영상 설명:', videoInfo.description);
+//               }
+//             );
+//           } catch (e) {
+//             console.log(e);
+//           }
+//         } else console.log('스트리밍 없슴');
+//       }
+//     );
+//     console.log('다시 탐색합니다...');
+//     // setTimeout(getYoutube, 10000);
+//   } catch (e) {
+//     console.log(e);
+//   }
+// };
 // getYoutube();
 
 const redirectURI = encodeURI('http://localhost:3000/callback');
@@ -124,6 +124,7 @@ const playwright = async () => {
   my_state = state_value;
   console.log('playwright', my_code, my_state);
   justChrom = browser;
+  browser.close();
   return { code: my_code, state: my_state };
 };
 const runNaver = () => {
@@ -199,19 +200,31 @@ let chzzkLiveID;
 const chzzkKeyword = encodeURI('마레플로스');
 const getChzzkLive = () => {
   console.log('hello chzzk api!');
+  // https://api.chzzk.naver.com/service/v1/search/lives?keyword=%EC%8A%A4%EB%82%98%EB%9E%91&offset=0&size=18
+ var temp = `https://api.chzzk.naver.com/service/v1/search/channels?keyword=${chzzkKeyword}&offset=0&size=13&withFirstChannelContent=true`
+ try{
   axios
   .get(
-    `https://api.chzzk.naver.com/service/v1/search/channels?keyword=${chzzkKeyword}&offset=0&size=13&withFirstChannelContent=true`
+    temp, {
+      headers: {
+        "User-Agent" : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0'
+      }
+    }
   )
   .then((res) => {
+    // console.log("res",res)
     const result = res.data.content.data;
+    console.log("res",res.data.content);
+
     if (
       result[0].content.live !== null &&
       result[0].channel.openLive === true
     ) {
       const liveID = result[0].content.live.liveId;
+      console.log("liveID",liveID);
+      console.log("chzzk ID", chzzkLiveID);
       if (chzzkLiveID !== liveID) {
-        // console.log('live alive!!');
+        console.log('live alive!!');
         console.log(result[0]);
         chzzkLiveID = liveID;
         subject = encodeURI(
@@ -234,6 +247,10 @@ const getChzzkLive = () => {
     console.log(e);
     sendMessageTG('axios error :: \n',e)
   });
+ } catch(e){
+  console.log(e)
+ }
+  
 };
 getChzzkLive();
 
