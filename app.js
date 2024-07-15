@@ -5,7 +5,7 @@ const axios = require("axios");
 const { chromium } = require("playwright");
 require("dotenv").config();
 
-const getChzzkLive = require("./src/chizzik");
+// const getChzzkLive = require("./src/chizzik");
 
 const app = express();
 // 미들웨어
@@ -26,18 +26,18 @@ const clubid = process.env.NAVER_CLUB_ID;
 const menuid = process.env.NAVER_CLUB_MENU_ID;
 
 // const youtubeAPI = process.env.YOUTUBE_API_KEY;
-const { OAuth2Client } = require("google-auth-library");
+// const { OAuth2Client } = require("google-auth-library");
 /* eslint-disable node/no-unpublished-require */
-const crenentials = require("./credentials.json");
+// const crenentials = require("./credentials.json");
 
-const { clientid, clientsecret, redirecturis } = crenentials.web;
+// const { clientid, clientsecret, redirecturis } = crenentials.web;
 // const testChannelID = process.env.MARE_YOUTUBE_ID;
 let subject = encodeURI("생방송알림");
 let content = encodeURI(process.env.MARE_URL);
 
-const oAuth2Client = new OAuth2Client(clientid, clientsecret, redirecturis);
+// const oAuth2Client = new OAuth2Client(clientid, clientsecret, redirecturis);
 
-const SCOPE = ["https://www.googleapis.com/auth/youtube.readonly"];
+// const SCOPE = ["https://www.googleapis.com/auth/youtube.readonly"];
 
 const sendMessageTG = async (data) => {
   const botToken = process.env.TELEGRAM_ID;
@@ -329,16 +329,6 @@ const getTwitchLive = async () => {
 
 //트위치 get videos
 //getTwitchLive();
-
-const sendMessageTG = async (data) => {
-  const botToken = process.env.TELEGRAM_ID;
-  const chatID = process.env.TELEGRAM_CHAT_ID;
-
-  axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    chat_id: chatID,
-    text: data.toString()
-  });
-};
 
 app.get('/callback', async (req, res) => {
   res.sendFile(__dirname + '/public/callback.html');
