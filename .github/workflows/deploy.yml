@@ -17,14 +17,21 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Copy files via SSH
+      - name: Add GitHub to known_hosts
         run: |
           ssh-keyscan github.com >> ~/.ssh/known_hosts
-          scp -r ./* ${{ secrets.SERVER_IP}}:/home/wellbing/notification
+
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Copy files via SCP
+        run: |
+          scp -r ./* user@${{ secrets.SERVER_IP }}:/home/wellbing/notification
 
       - name: Install dependencies and restart app
         run: |
-          ssh  ${{ secrets.SERVER_IP}} << 'EOF'
+          ssh user@${{ secrets.SERVER_IP }} << 'EOF'
             cd /home/wellbing/notification
             npm install
             pm2 restart all || pm2 start app.js
