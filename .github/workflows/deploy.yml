@@ -1,31 +1,31 @@
 name: Deploy to Ubuntu Server
 
-on : 
+on:
   push:
     branches:
       - main
 
 jobs:
-    deploy:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v2
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-            - name: Setup SSH
-              uses: webfactory/ssh-agent@v0.5.3
-              with:
-                ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-            - name: Copy files via SSH
-              run: |
-                ssh-keyscan -H ${{ secrets.SSH_PRIVATE_KEY }} >> ~/.ssh/known_hosts
-                scp -r ./* ${{ secrets.SERVER_IP}}:/home/wellbing/notification
+      - name: Copy files via SSH
+        run: |
+          ssh-keyscan -H ${{ secrets.SSH_PRIVATE_KEY }} >> ~/.ssh/known_hosts
+          scp -r ./* ${{ secrets.SERVER_IP}}:/home/wellbing/notification
 
-            - name: Install dependencies and restart app
-              run: |
-                ssh  ${{ secrets.SERVER_IP}} << 'EOF'
-                  cd /home/wellbing/notification
-                  npm install
-                  pm2 restart all || pm2 start app.js
-                EOF
+      - name: Install dependencies and restart app
+        run: |
+          ssh  ${{ secrets.SERVER_IP}} << 'EOF'
+            cd /home/wellbing/notification
+            npm install
+            pm2 restart all || pm2 start app.js
+          EOF
