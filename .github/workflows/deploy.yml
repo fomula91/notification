@@ -24,7 +24,7 @@ jobs:
 
       - name: Copy files via SCP
         run: |
-          scp -r ./* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/notificaion
+          scp -r ./* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/notification
 
       - name: Install dependencies and restart app
         run: |
