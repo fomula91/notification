@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -17,22 +18,18 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add GitHub to known_hosts
-        run: |
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
       - name: Add server to known_hosts
         run: |
-          ssh-keyscan ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Copy files via SCP
         run: |
-          scp -r ./* user@${{ secrets.SERVER_IP }}:/home/wellbing/notification
+          scp -r ./* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/notificaion
 
       - name: Install dependencies and restart app
         run: |
-          ssh user@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /home/wellbing/notification
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /home/${{ secrets.SERVER_USER }}/notification
             npm install
             pm2 restart all || pm2 start app.js
           EOF
