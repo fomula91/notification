@@ -5,14 +5,10 @@ const axios = require("axios");
 const { chromium } = require("playwright");
 require("dotenv").config();
 
-// const getChzzkLive = require("./src/chizzik");
-
 const app = express();
 // 미들웨어
 app.use(express.static("public"));
 app.use(express.json());
-
-// const { google } = require("googleapis");
 
 const port = 3000;
 
@@ -25,19 +21,8 @@ const NclientSecret = process.env.NAVER_CLIENT_TEST_SECRET;
 const clubid = process.env.NAVER_CLUB_ID;
 const menuid = process.env.NAVER_CLUB_MENU_ID;
 
-// const youtubeAPI = process.env.YOUTUBE_API_KEY;
-// const { OAuth2Client } = require("google-auth-library");
-/* eslint-disable node/no-unpublished-require */
-// const crenentials = require("./credentials.json");
-
-// const { clientid, clientsecret, redirecturis } = crenentials.web;
-// const testChannelID = process.env.MARE_YOUTUBE_ID;
 let subject = encodeURI("생방송알림");
 let content = encodeURI(process.env.MARE_URL);
-
-// const oAuth2Client = new OAuth2Client(clientid, clientsecret, redirecturis);
-
-// const SCOPE = ["https://www.googleapis.com/auth/youtube.readonly"];
 
 const sendMessageTG = async (data) => {
   const botToken = process.env.TELEGRAM_ID;
@@ -48,65 +33,6 @@ const sendMessageTG = async (data) => {
     text: data.toString(),
   });
 };
-
-// let videoid;
-
-// const getYoutube = () => {
-//   const youtube = google.youtube({
-//     version: 'v3',
-//     auth: oAuth2Client
-//   });
-//   try {
-//     youtube.search.list(
-//       {
-//         part: 'id',
-//         channelId: testChannelID,
-//         eventType: 'live',
-//         type: 'video'
-//       },
-//       (err, res) => {
-//         if (err) {
-//           console.error('api 오류', err);
-//           return;
-//         }
-
-//         const items = res.data.items;
-
-//         if (items && items.length > 0) {
-//           console.log('실시간 스트리밍');
-//           console.log(items);
-//           console.log(items[0].id.videoId);
-//           videoid = items[0].id.videoId;
-
-//           try {
-//             youtube.videos.list(
-//               {
-//                 part: 'snippet',
-//                 id: videoid
-//               },
-//               (err, res) => {
-//                 if (err) {
-//                   console.error('API 오류', err);
-//                   return;
-//                 }
-//                 const videoInfo = res.data.items[0].snippet;
-//                 console.log('동영상 제목:', videoInfo.title);
-//                 console.log('동영상 설명:', videoInfo.description);
-//               }
-//             );
-//           } catch (e) {
-//             console.log(e);
-//           }
-//         } else console.log('스트리밍 없슴');
-//       }
-//     );
-//     console.log('다시 탐색합니다...');
-//     // setTimeout(getYoutube, 10000);
-//   } catch (e) {
-//     console.log(e);
-//   }
-// };
-// getYoutube();
 
 const redirectURI = encodeURI("http://localhost:3000/callback");
 let naverapiurl = "";
@@ -136,7 +62,7 @@ const playwright = async () => {
   const codevalue = params.get("code");
   justChrom = browser;
   browser.close();
-  return { code: my_code, state: my_state };
+  return { code: codevalue, state: statevalue };
 };
 const runNaver = () => {
   const startPlaywright = () =>
@@ -194,153 +120,149 @@ const runNaver = () => {
 // runNaver();
 
 let chzzkLiveID;
-const chzzkKeyword = encodeURI('마레플로스');
+const chzzkKeyword = encodeURI("마레플로스");
 const getChzzkLive = () => {
-  console.log('hello chzzk api!');
-  // https://api.chzzk.naver.com/service/v1/search/lives?keyword=%EC%8A%A4%EB%82%98%EB%9E%91&offset=0&size=18
- var temp = `https://api.chzzk.naver.com/service/v1/search/channels?keyword=${chzzkKeyword}&offset=0&size=13&withFirstChannelContent=true`
- try{
-  axios
-  .get(
-    temp, {
-      headers: {
-        "User-Agent" : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0'
-      }
-    }
-  )
-  .then((res) => {
-    // console.log("res",res)
-    const result = res.data.content.data;
-    console.log("res",res.data.content);
+  console.log("hello chzzk api!");
+  const temp = `https://api.chzzk.naver.com/service/v1/search/channels?keyword=${chzzkKeyword}&offset=0&size=13&withFirstChannelContent=true`;
+  try {
+    axios
+      .get(temp, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
+        },
+      })
+      .then((res) => {
+        const result = res.data.content.data;
+        console.log("res", res.data.content);
 
-    if (
-      result[0].content.live !== null &&
-      result[0].channel.openLive === true
-    ) {
-      const liveID = result[0].content.live.liveId;
-      console.log("liveID",liveID);
-      console.log("chzzk ID", chzzkLiveID);
-      if (chzzkLiveID !== liveID) {
-        console.log('live alive!!');
-        console.log(result[0]);
-        chzzkLiveID = liveID;
-        subject = encodeURI(
-          '[방송ON][치지직] ' + result[0].content.live.liveTitle
-        );
-        content = encodeURI(htmlWithoutNewlines);
-        runNaver();
-        setTimeout(getChzzkLive, 10000);
-        sendMessageTG('[치지직]' + result[0].content.live.liveTitle);
-      } else {
-        setTimeout(getChzzkLive, 10000);
-        console.log('현재 치지직 아이디와 저장된 치지직 아이디가 같음');
-      }
-    }
-    else{
-        setTimeout(getChzzkLive, 10000);
-        console.log('치지직 방송 정보 없음.. 다시 탐색합니다.')
-    }
-  }).catch( e => {
+        if (
+          result[0].content.live !== null &&
+          result[0].channel.openLive === true
+        ) {
+          const liveID = result[0].content.live.liveId;
+          console.log("liveID", liveID);
+          console.log("chzzk ID", chzzkLiveID);
+          if (chzzkLiveID !== liveID) {
+            console.log("live alive!!");
+            console.log(result[0]);
+            chzzkLiveID = liveID;
+            const textHeader = "[방송ON][치지직] ";
+            subject = encodeURI(textHeader + result[0].content.live.liveTitle);
+            content = encodeURI(htmlWithoutNewlines);
+            runNaver();
+            setTimeout(getChzzkLive, 10000);
+            const messageHeader = "[치지직]";
+            sendMessageTG(messageHeader + result[0].content.live.liveTitle);
+          } else {
+            setTimeout(getChzzkLive, 10000);
+            console.log("현재 치지직 아이디와 저장된 치지직 아이디가 같음");
+          }
+        } else {
+          setTimeout(getChzzkLive, 10000);
+          console.log("치지직 방송 정보 없음.. 다시 탐색합니다.");
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        sendMessageTG("axios error :: \n", e);
+      });
+  } catch (e) {
     console.log(e);
-    sendMessageTG('axios error :: \n',e)
-  });
- } catch(e){
-  console.log(e)
- }
-  
+  }
 };
 getChzzkLive();
 
 // twitch api
-const TWITCHID = process.env.TWITCH_CLIENT_ID;
-const TWITCHKEY = process.env.TWITCH_SECRET_KEY;
-let twitch_token;
+// const TWITCHID = process.env.TWITCH_CLIENT_ID;
+// const TWITCHKEY = process.env.TWITCH_SECRET_KEY;
+// let twitch_token;
 
-const getTwitchToken = () => {
-  try {
-    axios
-      .post(
-        `https://id.twitch.tv/oauth2/token?client_id=${TWITCHID}&client_secret=${TWITCHKEY}&grant_type=client_credentials`
-      )
-      .then((res) => {
-        twitch_token = res.data.access_token;
-        setTimeout(getTwitchToken, 12 * 60 * 60 * 1000);
-        sendMessageTG('트위치 로그인 정보 갱신!');
-      });
-  } catch (e) {
-    console.log('fail Twitch token');
-    sendMessageTG('fail Twitch Token :: \n' + e);
-  }
-};
+// const getTwitchToken = () => {
+//   try {
+//     axios
+//       .post(
+//         `https://id.twitch.tv/oauth2/token?client_id=${TWITCHID}&client_secret=${TWITCHKEY}&grant_type=client_credentials`
+//       )
+//       .then((res) => {
+//         twitch_token = res.data.access_token;
+//         setTimeout(getTwitchToken, 12 * 60 * 60 * 1000);
+//         sendMessageTG("트위치 로그인 정보 갱신!");
+//       });
+//   } catch (e) {
+//     console.log("fail Twitch token");
+//     sendMessageTG("fail Twitch Token :: \n" + e);
+//   }
+// };
 // getTwitchToken();
 
-var twitch_id = '';
-var twitch_title;
+// var twitch_id = "";
+// var twitch_title;
 
-const mare_id = process.env.TWITCH_MARE_ID;
-const test_id = process.env.TEST_USER_ID;
+// const mare_id = process.env.TWITCH_MARE_ID;
+// const test_id = process.env.TEST_USER_ID;
 
 const koreaTime = () => {
   const offset = 1000 * 60 * 60 * 9;
   const koreaNow = new Date(new Date().getTime() + offset);
-  console.log(koreaNow.toISOString().replace('T', ' ').split('.')[0]);
+  console.log(koreaNow.toISOString().replace("T", " ").split(".")[0]);
 };
 
-const getTwitchLive = async () => {
-  try {
-    if (twitch_token) {
-      console.log('token get');
-    } else {
-      console.log('no token');
-      setTimeout(getTwitchLive, 10000);
-      return;
-    }
-    const response = await axios
-      .get(
-        `https://api.twitch.tv/helix/streams?user_id=${mare_id}&user_id=${test_id}`,
-        {
-          headers: {
-            Authorization: 'Bearer ' + twitch_token,
-            'Client-Id': process.env.TWITCH_CLIENT_ID
-          }
-        }
-      )
-      .then((res) => res.data.data);
-    if (response.length > 0) {
-      koreaTime();
-      if (response[0].id !== twitch_id) {
-        twitch_id = response[0].id;
-        twitch_title = '[방송ON] ' + response[0].title;
-        subject = encodeURI(twitch_title);
-        sendMessageTG('[트위치]' + twitch_title);
-        runNaver();
-      }
-    }
-    setTimeout(getTwitchLive, 10000);
-  } catch (e) {
-    console.log(e, 'interval error \n');
-    console.log(e.code, 'intervel err code \n');
-    console.log(e.response, 'interval err response \n');
+// const getTwitchLive = async () => {
+//   try {
+//     if (twitch_token) {
+//       console.log("token get");
+//     } else {
+//       console.log("no token");
+//       setTimeout(getTwitchLive, 10000);
+//       return;
+//     }
+//     const response = await axios
+//       .get(
+//         `https://api.twitch.tv/helix/streams?user_id=${mare_id}&user_id=${test_id}`,
+//         {
+//           headers: {
+//             Authorization: "Bearer " + twitch_token,
+//             "Client-Id": process.env.TWITCH_CLIENT_ID,
+//           },
+//         }
+//       )
+//       .then((res) => res.data.data);
+//     if (response.length > 0) {
+//       koreaTime();
+//       if (response[0].id !== twitch_id) {
+//         twitch_id = response[0].id;
+//         twitch_title = "[방송ON] " + response[0].title;
+//         subject = encodeURI(twitch_title);
+//         sendMessageTG("[트위치]" + twitch_title);
+//         runNaver();
+//       }
+//     }
+//     setTimeout(getTwitchLive, 10000);
+//   } catch (e) {
+//     console.log(e, "interval error \n");
+//     console.log(e.code, "intervel err code \n");
+//     console.log(e.response, "interval err response \n");
 
-    sendMessageTG(e);
-    setTimeout(getTwitchLive, 10000);
-  }
-};
+//     sendMessageTG(e);
+//     setTimeout(getTwitchLive, 10000);
+//   }
+// };
 
 //트위치 get videos
 //getTwitchLive();
 
-app.get('/callback', async (req, res) => {
-  res.sendFile(__dirname + '/public/callback.html');
+app.get("/callback", async (req, res) => {
+  res.sendFile(__dirname + "/public/callback.html");
 });
 
-app.get("/youtube", async (req, res) => {
-  const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: "offline",
-    scope: SCOPE,
-  });
-  res.redirect(authUrl);
-});
+// app.get("/youtube", async (req, res) => {
+//   const authUrl = oAuth2Client.generateAuthUrl({
+//     access_type: "offline",
+//     scope: SCOPE,
+//   });
+//   res.redirect(authUrl);
+// });
 
 app.get("/oauth2callback", async (req, res) => {
   const { code } = req.query;
