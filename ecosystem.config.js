@@ -2,7 +2,8 @@ module.exports = {
   apps: [
     {
       name: "app",
-      script: "./app.js",
+      script: "xvfb-run",
+      args: "-a node ./app.js",
       instances: 1,
       exec_mode: "cluster",
       watch: true,

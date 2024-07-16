@@ -48,7 +48,7 @@ const playwright = async () => {
   await page.locator("#id").fill(process.env.NAVER_ID);
   await page.locator("#pw").fill(process.env.NAVER_PW);
   await page.locator(".btn_login").click();
-
+  await page.screenshot({ path: "./screenshots/login.png" });
   // console.log(page.getByLabel('전체 동의하기'))
   // if(page.getByLabel('전체 동의하기')){
   //     console.log("hello")
@@ -56,7 +56,9 @@ const playwright = async () => {
   //     await page.locator('.agree').click();
   // }
 
+  await page.waitForNavigation();
   await page.goto(page.url());
+  await page.screenshot({ path: "./screenshots/afterlogin.png" });
   const params = new URLSearchParams(new URL(page.url()).search);
   const statevalue = params.get("state");
   const codevalue = params.get("code");
