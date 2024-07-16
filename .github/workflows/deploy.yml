@@ -26,10 +26,13 @@ jobs:
         run: |
           scp -r ./* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/notification
 
-      - name: Install dependencies and restart app
+      - name: Set execute permissions for deploy.sh
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} 'chmod +x /home/${{ secrets.SERVER_USER }}/notification/deploy.sh'
+
+      - name: Run deployment script
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /home/${{ secrets.SERVER_USER }}/notification
-            npm install
-            pm2 restart all || pm2 start ecosystem.config.js
+            ./deploy.sh
           EOF
