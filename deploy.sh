@@ -8,14 +8,19 @@ export DISPLAY=:99
 # Install dependencies
 npm install
 
-# Install Playwright
-npx playwright install
+# Navigate to the project directory
+cd /home/${USER}/notification
+
+# Check if Playwright is installed
+if ! npm list playwright > /dev/null 2>&1; then
+  echo "Playwright is not installed. Installing..."
+  npm install playwright
+else
+  echo "Playwright is already installed."
+fi
 
 # Stop any running instances of the application
 pm2 stop all
 
 # Start the application with PM2
 pm2 start ecosystem.config.js --env production
-
-# Wait for the application to exit
-wait $XVFB_PID
