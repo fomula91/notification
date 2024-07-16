@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,5 +7,20 @@
   </head>
   <body>
     <div>callback</div>
+    <div id="number"></div>
+    <div id="redirect-uri"></div>
+    <script>
+      // 임의의 문자열을 생성하는 코드
+      const state = Math.random().toString(36).substring(2, 15);
+      const redirectURI = encodeURI("http://localhost:3000/callback");
+
+      // HTML 문서가 로드된 후 실행되는 함수
+      document.addEventListener("DOMContentLoaded", (event) => {
+        const numberDiv = document.getElementById("number");
+        numberDiv.textContent = state;
+        const redirectURIDiv = document.getElementById("redirect-uri");
+        redirectURIDiv.textContent = redirectURI;
+      });
+    </script>
   </body>
 </html>

@@ -34,21 +34,21 @@ const sendMessageTG = async (data) => {
   });
 };
 
-const redirectURI = encodeURI("http://localhost:3000/callback");
-let naverapiurl = "";
+const redirectURI = encodeURIComponent("http://localhost:3000/callback");
 
 const state = Math.random().toString(36).substring(2, 15);
-naverapiurl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&clientid=${NclientId}&redirect_uri=${redirectURI}&state=${state}`;
+const naverapiurl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NclientId}&redirect_uri=${redirectURI}&state=${state}`;
+console.log(naverapiurl);
 let justChrom;
 const playwright = async () => {
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
   const page = await context.newPage();
-  await page.goto(naverapiurl);
+  await page.goto(naverapiurl, { waitUntil: "networkidle" });
   await page.locator("#id").fill(process.env.NAVER_ID);
   await page.locator("#pw").fill(process.env.NAVER_PW);
   await page.locator(".btn_login").click();
-  await page.screenshot({ path: "./screenshots/login.png" });
+  // await page.screenshot({ path: "./screenshots/login.png" });
   // console.log(page.getByLabel('전체 동의하기'))
   // if(page.getByLabel('전체 동의하기')){
   //     console.log("hello")
@@ -56,9 +56,8 @@ const playwright = async () => {
   //     await page.locator('.agree').click();
   // }
 
-  await page.waitForNavigation();
-  await page.goto(page.url());
-  await page.screenshot({ path: "./screenshots/afterlogin.png" });
+  await page.goto(page.url(), { waitUntil: "networkidle" });
+  // await page.screenshot({ path: "./screenshots/afterlogin.png" });
   const params = new URLSearchParams(new URL(page.url()).search);
   const statevalue = params.get("state");
   const codevalue = params.get("code");
@@ -76,19 +75,26 @@ const runNaver = () => {
     .then(async (res) => {
       const naverCode = res.code;
       const naverState = res.state;
+      console.log("navaer code, state \n", naverCode, naverState);
       const headers = {
         "X-Naver-Client-Id": NclientId,
         "X-Naver-Client-Secret": NclientSecret,
       };
-      const apiUrl = `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&clientid=${NclientId}&clientsecret=${NclientSecret}&redirect_uri=${redirectURI}&code=${naverCode}&state=${naverState}`;
-      const response = await axios.get(apiUrl, {
-        headers,
-      });
-      const { accessToken, refreshToken } = response.data;
+      const tokenapiurl = `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id=${NclientId}&client_secret=${NclientSecret}&redirect_uri=${redirectURI}&code=${naverCode}&state=${naverState}`;
+      return axios
+        .get(tokenapiurl, {
+          headers,
+        })
+        .then((response) => {
+          // eslint-disable-next-line camelcase
+          const { access_token, refresh_token } = response.data;
 
-      return { ac_token: accessToken, rf_token: refreshToken };
+          // eslint-disable-next-line camelcase
+          return { ac_token: access_token, rf_token: refresh_token };
+        });
     })
     .then(async (res) => {
+      console.log("then res", res);
       const ac = res.ac_token;
       const apiUrl = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
       const token = `Bearer ${ac}`;
@@ -253,6 +259,15 @@ getChzzkLive();
 
 app.get("/callback", async (req, res) => {
   res.sendFile(path.join(__dirname, "public", "callback.html"));
+});
+
+app.get("/login", async (req, res) => {
+  const CID = process.env.NAVER_CLIENT_TEST_ID;
+  const CS = process.env.NAVER_CLIENT_SECRET;
+  const RURI = encodeURIComponent("http://localhost:3000/callback");
+  const S = Math.random().toString(36).substring(2, 15);
+  const naverAuthURL = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${CID}&redirect_uri=${RURI}&state=${S}`;
+  res.redirect(naverAuthURL);
 });
 
 // app.get("/youtube", async (req, res) => {

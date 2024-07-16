@@ -133,3 +133,4 @@ dist
 /playwright/.cache/
 
 credentials.json
+.DS_Store
