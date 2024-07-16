@@ -23,7 +23,7 @@ npm install
 # Check if Playwright is installed
 if ! npm list playwright > /dev/null 2>&1; then
   echo "Playwright is not installed. Installing..."
-  npm install playwright
+  npx install playwright
 else
   echo "Playwright is already installed."
 fi
