@@ -38,7 +38,7 @@ const redirectURI = encodeURIComponent("http://localhost:3000/callback");
 
 const state = Math.random().toString(36).substring(2, 15);
 const naverapiurl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NclientId}&redirect_uri=${redirectURI}&state=${state}`;
-console.log(naverapiurl);
+
 let justChrom;
 const playwright = async () => {
   const browser = await chromium.launch({ headless: false });
@@ -75,7 +75,6 @@ const runNaver = () => {
     .then(async (res) => {
       const naverCode = res.code;
       const naverState = res.state;
-      console.log("navaer code, state \n", naverCode, naverState);
       const headers = {
         "X-Naver-Client-Id": NclientId,
         "X-Naver-Client-Secret": NclientSecret,
@@ -94,7 +93,6 @@ const runNaver = () => {
         });
     })
     .then(async (res) => {
-      console.log("then res", res);
       const ac = res.ac_token;
       const apiUrl = `https://openapi.naver.com/v1/cafe/${clubid}/menu/${menuid}/articles`;
       const token = `Bearer ${ac}`;
