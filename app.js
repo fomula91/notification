@@ -122,7 +122,7 @@ const runNaver = () => {
 // runNaver();
 
 let chzzkLiveID;
-const chzzkKeyword = encodeURI("마레플로스");
+const chzzkKeyword = encodeURI("에렌디라");
 const getChzzkLive = () => {
   console.log("hello chzzk api!");
   const temp = `https://api.chzzk.naver.com/service/v1/search/channels?keyword=${chzzkKeyword}&offset=0&size=13&withFirstChannelContent=true`;
