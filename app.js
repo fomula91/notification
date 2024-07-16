@@ -18,8 +18,8 @@ const htmlWithoutNewlines = htmlString.replace(/\n/g, "");
 
 const NclientId = process.env.NAVER_CLIENT_TEST_ID;
 const NclientSecret = process.env.NAVER_CLIENT_TEST_SECRET;
-const clubid = process.env.NAVER_CLUB_ID;
-const menuid = process.env.NAVER_CLUB_MENU_ID;
+const clubid = process.env.NAVER_MARE_ID;
+const menuid = process.env.NAVER_MARE_MENU_ID;
 
 let subject = encodeURI("생방송알림");
 let content = encodeURI(process.env.MARE_URL);
@@ -41,7 +41,7 @@ const naverapiurl = `https://nid.naver.com/oauth2.0/authorize?response_type=code
 
 let justChrom;
 const playwright = async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
   await page.goto(naverapiurl, { waitUntil: "networkidle" });
@@ -126,7 +126,7 @@ const runNaver = () => {
 // runNaver();
 
 let chzzkLiveID;
-const chzzkKeyword = encodeURI("에렌디라");
+const chzzkKeyword = encodeURI("마레플로스");
 const getChzzkLive = () => {
   console.log("hello chzzk api!");
   const temp = `https://api.chzzk.naver.com/service/v1/search/channels?keyword=${chzzkKeyword}&offset=0&size=13&withFirstChannelContent=true`;
