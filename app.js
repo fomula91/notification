@@ -204,11 +204,11 @@ getChzzkLive();
 // const mare_id = process.env.TWITCH_MARE_ID;
 // const test_id = process.env.TEST_USER_ID;
 
-const koreaTime = () => {
-  const offset = 1000 * 60 * 60 * 9;
-  const koreaNow = new Date(new Date().getTime() + offset);
-  console.log(koreaNow.toISOString().replace("T", " ").split(".")[0]);
-};
+// const koreaTime = () => {
+//   const offset = 1000 * 60 * 60 * 9;
+//   const koreaNow = new Date(new Date().getTime() + offset);
+//   console.log(koreaNow.toISOString().replace("T", " ").split(".")[0]);
+// };
 
 // const getTwitchLive = async () => {
 //   try {
@@ -251,11 +251,8 @@ const koreaTime = () => {
 //   }
 // };
 
-//트위치 get videos
-//getTwitchLive();
-
 app.get("/callback", async (req, res) => {
-  res.sendFile(__dirname + "/public/callback.html");
+  res.sendFile(path.join(__dirname, "public", "callback.html"));
 });
 
 // app.get("/youtube", async (req, res) => {
@@ -266,21 +263,21 @@ app.get("/callback", async (req, res) => {
 //   res.redirect(authUrl);
 // });
 
-app.get("/oauth2callback", async (req, res) => {
-  const { code } = req.query;
-  console.log(req.query.code, "hello code");
-  try {
-    const { tokens } = await oAuth2Client.getToken(code);
-    oAuth2Client.setCredentials(tokens);
-    console.log(`a Token :: ${tokens.accesstoken}`);
-    console.log(`r Token :: ${tokens.refreshtoken}`);
-    console.log("인증 완료");
-    res.redirect("/");
-  } catch (e) {
-    console.error("토큰 얻기 오류:", e);
-    res.status(500).send("토큰을 얻는 도중 오류가 발생했습니다.");
-  }
-});
+// app.get("/oauth2callback", async (req, res) => {
+//   const { code } = req.query;
+//   console.log(req.query.code, "hello code");
+//   try {
+//     const { tokens } = await oAuth2Client.getToken(code);
+//     oAuth2Client.setCredentials(tokens);
+//     console.log(`a Token :: ${tokens.accesstoken}`);
+//     console.log(`r Token :: ${tokens.refreshtoken}`);
+//     console.log("인증 완료");
+//     res.redirect("/");
+//   } catch (e) {
+//     console.error("토큰 얻기 오류:", e);
+//     res.status(500).send("토큰을 얻는 도중 오류가 발생했습니다.");
+//   }
+// });
 
 app.listen(port, () => {
   console.log(`서버가 실행됩니다. http://localhost:${port}`);
